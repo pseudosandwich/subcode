@@ -1,2 +1,0 @@
-ID = 'df990ba8eef1ed321f03'
-SECRET = 'cc7523cd5cb970fcfd52875902f1871cfa20577e'

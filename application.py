@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import json
 import base64
 from random import randint
-
+import config
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -91,7 +91,7 @@ def send_mail(db):
 def send_one_message(receiver, day, language):
     """response = requests.post(
         "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
-        auth=("api", "key-446186653236f98dfccf322d4eb6aa16"),
+        auth=("api", config.MAILGUN_KEY),
         data={"from": "Mailgun Sandbox <postmaster@sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org>",
               "to": receiver,
               "subject": "New code from Subcode",
@@ -129,16 +129,15 @@ def getFileFromLanguage(language):
     return langs[language];
 
 def makeGithubRequest(url, escape):
-    execfile("api-config.py", config)
 
     if not '?' in url :
         url += '?'
 
     fullUrl = ""
     if escape:
-        fullUrl = url + '\&client_id\=' + config["ID"] + '\&client_secret\=' + config["SECRET"]
+        fullUrl = url + '\&client_id\=' + config.GITHUB_ID + '\&client_secret\=' + config.GITHUB_SECRET
     else :
-        fullUrl = url + '&client_id=' + config["ID"] + '&client_secret=' + config["SECRET"]
+        fullUrl = url + '&client_id=' + config.GITHUB_ID + '&client_secret=' + config.GITHUB_SECRET
     r = requests.get(fullUrl)
 
     if(r.ok):
