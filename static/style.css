@@ -1,4 +1,11 @@
-/* */
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-size:2rem;
+}
+
+.flash {
+  background-color:#00ff6a
+}
 
 /* TYPEAHEAD */
 

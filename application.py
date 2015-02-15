@@ -89,14 +89,19 @@ def send_mail(db):
     return "Mailed!"
 
 def send_one_message(receiver, day, language):
-    """response = requests.post(
-        "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
-        auth=("api", config.MAILGUN_KEY),
-        data={"from": "Mailgun Sandbox <postmaster@sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org>",
-              "to": receiver,
-              "subject": "New code from Subcode",
-              "text": "Here's some new Swift code: " + getSomeCode(day, language)})"""
-    print('mailed things with response') #, response)
+    code = getSomeCode(day, language)
+    if code :
+        response = requests.post(
+            "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
+            auth=("api", config.MAILGUN_KEY),
+            data={"from": "Jackson de Campos <jackson@jacksondc.com>",
+                  "to": receiver,
+                  "subject": "New " + language + " code from Subcode",
+                  "html": "We have some new " + language + " code for you:\n\n<code>" +  + "</code>"
+                  })
+        print('mailed things with response', response)
+    else :
+        print("No code! Uh-oh!")
 
 def getFileFromLanguage(language):
     langs = {
