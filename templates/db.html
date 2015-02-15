@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Subcode{% endblock %}
+{% block content %}
+  <ul>
+  {% for entry in entries %}
+    <li>{{ entry.email }} | {{ entry.language }}
+    {% else %}
+    <li>Unbelievable.  No entries here so far.</li>
+  {% endfor %}
+  </ul>
+{% endblock %}

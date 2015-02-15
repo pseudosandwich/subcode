@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Subcode{% endblock %}
+{% block content %}
+  <h1>Subcode</h1>
+  <p>
+    Welcome to my awesome homepage.
+  </p>
+  <form action="." method="POST">
+    <input type="text" name="email" placeholder="john@example.com"/>
+    <div>Pick a language:
+      <label>Swift<input type="radio" name="language" value="swift"/></label>
+      <label>Lisp<input type="radio" name="language" value="lisp"/></label>
+      <label>C<input type="radio" name="language" value="c"/></label>
+    </div>
+    <button type="submit">Sign me up</button>
+  </form>
+{% endblock %}
