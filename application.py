@@ -59,13 +59,7 @@ def get_email():
     language = request.form['language']
     print("added user with email", text, "language", language)
 
-    languages = [];
-    oldLanguagesCursor = g.db.execute('select language from users where email=?', (text,))
-    for entry in oldLanguagesCursor:
-        #Alawys only one entry
-        languageString = entry[0];
-        print(languageString);
-        languages = pickle.loads(languageString)
+    languages = languagesByEmail(text)
     print(languages)
     if language not in languages:
         languages.append(language)
@@ -90,6 +84,16 @@ def engine():
     print("Sending mail at", datetime.now())
     print(send_mail(db))
     db.close()
+
+#retrieve languages by email
+def languagesByEmail(email):
+    languages = []
+    languagesCursor = g.db.execute('select language from users where email=?', (email,))
+    for entry in languagesCursor:
+        #Alawys only one entry
+        languageString = entry[0];
+        languages = pickle.loads(languageString)
+    return languages
 
 def send_mail(db):
     cur = db.execute('select id, email, language, timestep from users order by id desc')
