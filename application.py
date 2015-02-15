@@ -57,7 +57,7 @@ def get_email():
     language = request.form['language']
     print("added user with email", text, "language", language)
 
-    g.db.execute( 'insert into users (email, timestep, language) values (?, ?, ?)',
+    g.db.execute( 'insert or ignore into users (email, timestep, language) values (?, ?, ?)',
                   [ request.form['email'], 0, request.form['language'] ] )
     g.db.commit()
     flash('Thanks for signing up!')
