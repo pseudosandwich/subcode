@@ -2,13 +2,37 @@ html, body {
   height:100%;
 }
 
+* {
+  box-sizing:border-box;
+}
+
 body {
   font-family: 'Open Sans', sans-serif;
-  font-size:2rem;
+  color:#333;
 
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+body, input, button, select {
+  font-size:1.5rem;
+}
+
+input, button, select {
+  background:transparent;
+  border:1px solid #ddd;
+  border-radius:4px;
+  display:block;
+  margin:0 auto;
+  margin:0.5rem;
+  padding:0.5rem;
+  width:100%;
+  height:2rem;
+}
+
+h1, p {
+  margin:0;
 }
 
 .flash {
