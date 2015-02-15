@@ -7,7 +7,6 @@ from flask import Flask, request, render_template, flash, g
 from contextlib import closing
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
-from github import Github
 import json
 import base64
 from random import randint
@@ -58,8 +57,8 @@ def get_email():
     language = request.form['language']
     print("added user with email", text, "language", language)
 
-    g.db.execute( 'insert into users (email, language) values (?, ?)',
-                  [ request.form['email'], request.form['language'] ] )
+    g.db.execute( 'insert into users (email, timestep, language) values (?, ?, ?)',
+                  [ request.form['email'], 0, request.form['language'] ] )
     g.db.commit()
     flash('Thanks for signing up!')
 
@@ -80,39 +79,86 @@ def engine():
     db.close()
 
 def send_mail(db):
-    cur = db.execute('select email, language from users order by id desc')
-    entries = [dict(email=row[0], language=row[1]) for row in cur.fetchall()]
+    cur = db.execute('select id, email, language, timestep from users order by id desc')
+    entries = [dict(id=row[0], email=row[1], language=row[2], timestep=row[3]) for row in cur.fetchall()]
     for entry in entries :
-        send_one_message(entry.get('email'))
+        print("Email:", entry.get('email'), "timestep", entry.get('timestep'), "Language", entry.get('language'), "id", entry.get('id'));
+        send_one_message(entry.get('email'), entry.get('timestep'), entry.get('language'))
+        #update timestep
+        db.execute('update users set timestep=timestep+1 where id=?', entry.get('id'))
     return "Mailed!"
 
-def send_one_message(receiver):
-    response = requests.post(
+def send_one_message(receiver, day, language):
+    """response = requests.post(
         "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
         auth=("api", "key-446186653236f98dfccf322d4eb6aa16"),
         data={"from": "Mailgun Sandbox <postmaster@sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org>",
               "to": receiver,
               "subject": "New code from Subcode",
-              "text": "Here's some new Swift code: " + getSomeCode(5)})
-    print('mailed things with response', response)
+              "text": "Here's some new Swift code: " + getSomeCode(day, language)})"""
+    print('mailed things with response') #, response)
 
+def getFileFromLanguage(language):
+    langs = {
+        'ActionScript': 'as',
+        'C': 'c',
+        'C#': 'cs',
+        'C++': 'cpp',
+        'Clojure': 'clj',
+        'CoffeeScript': 'coffee',
+        'Common Lisp': 'lisp',
+        'CSS': 'css',
+        'Emacs Lisp': 'lisp',
+        'Erlang': 'erl',
+        'Haskell': 'hs',
+        'HTML': 'html',
+        'Java': 'java',
+        'JavaScript': 'js',
+        'Lua': 'lua',
+        'Objective-C': 'm',
+        'Perl': 'pl', # || pl'
+        'PHP': 'php',
+        'Python': 'py',
+        'Ruby': 'rb',
+        'Scala': 'scala',
+        'Scheme': 'ss', # || scm || sch'
+        'Swift': 'swift',
+        'Shell': 'sh',
+        'SQL': 'sql'
+    };
+    return langs[language];
 
-#gh = Github("user", "password")
-def makeGithubRequest(url):
-    r = requests.get(url)
+def makeGithubRequest(url, escape):
+    execfile("api-config.py", config)
+
+    if not '?' in url :
+        url += '?'
+
+    fullUrl = ""
+    if escape:
+        fullUrl = url + '\&client_id\=' + config["ID"] + '\&client_secret\=' + config["SECRET"]
+    else :
+        fullUrl = url + '&client_id=' + config["ID"] + '&client_secret=' + config["SECRET"]
+    r = requests.get(fullUrl)
+
     if(r.ok):
         allResults = json.loads(r.text or r.content)
         return allResults
     else :
-        print("Error in github request", r)
+        print("Error in github request", r.content())
 
-def getSomeCode(day):
+def getSomeCode(day, language):
     finalText = ""
-    while(len(finalText) == 0) :
+    safety = 0
+
+    while(len(finalText) == 0 and safety < 5) :
+        safety += 1 #just to make sure we don't go forever
         try:
           API_URL = "https://api.github.com/"
 
-          allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:swift\&sort\=stars\&order\=desc')
+          allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:' + language
+                                                 + '\&sort\=stars\&order\=desc', True)
+
           repos = allResults.get('items')
           repo = repos[randint(0, len(repos)-1)]
 
@@ -120,12 +166,15 @@ def getSomeCode(day):
           name = repo.get('name')
           branch = repo.get('default_branch')
 
-          searchResults = makeGithubRequest(API_URL + 'search/code?q=swift+language:swift+extension:swift+repo:' + owner + '/' + name)
+          extension = getFileFromLanguage(language)
+          searchResults = makeGithubRequest(API_URL + 'search/code?q=swift+language:' + language
+                                            + '+extension:' + extension + '+repo:' + owner + '/' + name, False)
+
           results = searchResults.get('items')
           result = results[randint(0, len(results)-1)]
           path = result.get('path')
 
-          fileResult = makeGithubRequest(API_URL + "repos/" + owner + "/" + name + "/contents/" + path)
+          fileResult = makeGithubRequest(API_URL + "repos/" + owner + "/" + name + "/contents/" + path, False)
           file = fileResult.get('content')
           plaintext = base64.b64decode(file).decode()
 
@@ -137,6 +186,13 @@ def getSomeCode(day):
           finalText = ""
           for i in range(totalLines) :
               finalText += lines[startLine + i] + "\n"
+
+          """print("ft", finalText)
+          print("lines", lines)
+          print("path", path)
+          print("extension", extension)
+          print("owner", owner)
+          print("name", name)"""
         except:
           pass
 
@@ -148,7 +204,7 @@ if __name__ == "__main__":
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
 
     try:
         # This is here to simulate application activity (which keeps the main thread alive).
