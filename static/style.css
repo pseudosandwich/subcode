@@ -36,7 +36,9 @@ h1, p {
 }
 
 .flash {
-  background-color:#00ff6a;
+  background-color:#18e76e;
+  border-radius:0.5rem;
+  padding:0.25rem;
 }
 
 .main {

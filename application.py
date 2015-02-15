@@ -207,9 +207,11 @@ def getSomeCode(day, language):
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'interval', minutes=1)
+    scheduler.add_job(engine, 'interval', days=1)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+
+    #send_one_message('jacksondecampos@gmail.com', 10, 'Swift');
 
     app.run(debug=True, use_reloader=False)
 
