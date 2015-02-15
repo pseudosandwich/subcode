@@ -76,7 +76,7 @@ def show_entries():
 def engine():
     db = connect_db()
     print("Sending mail at", datetime.now())
-    #send_mail(db)
+    print(send_mail(db))
     db.close()
 
 def send_mail(db):
@@ -107,30 +107,38 @@ def makeGithubRequest(url):
         print("Error in github request", r)
 
 def getSomeCode(day):
-    API_URL = "https://api.github.com/"
-
-    allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:swift\&sort\=stars\&order\=desc')
-    repo = allResults.get('items')[0]
-    owner = repo.get('owner').get('login')
-    name = repo.get('name')
-    branch = repo.get('default_branch')
-
-    searchResults = makeGithubRequest(API_URL + 'search/code?q=swift+language:swift+extension:swift+repo:' + owner + '/' + name)
-    result = searchResults.get('items')[0]
-    path = result.get('path')
-
-    fileResult = makeGithubRequest(API_URL + "repos/" + owner + "/" + name + "/contents/" + path)
-    file = fileResult.get('content')
-    plaintext = base64.b64decode(file).decode()
-
-    lines = plaintext.split('\n')
-    totalLines = (day + 1) * 2
-
-    startLine = randint(0, len(lines) - totalLines)
-
     finalText = ""
-    for i in range(totalLines) :
-        finalText += lines[startLine + i] + "\n"
+    while(len(finalText) == 0) :
+        try:
+          API_URL = "https://api.github.com/"
+
+          allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:swift\&sort\=stars\&order\=desc')
+          repos = allResults.get('items')
+          repo = repos[randint(0, len(repos)-1)]
+
+          owner = repo.get('owner').get('login')
+          name = repo.get('name')
+          branch = repo.get('default_branch')
+
+          searchResults = makeGithubRequest(API_URL + 'search/code?q=swift+language:swift+extension:swift+repo:' + owner + '/' + name)
+          results = searchResults.get('items')
+          result = results[randint(0, len(results)-1)]
+          path = result.get('path')
+
+          fileResult = makeGithubRequest(API_URL + "repos/" + owner + "/" + name + "/contents/" + path)
+          file = fileResult.get('content')
+          plaintext = base64.b64decode(file).decode()
+
+          lines = plaintext.split('\n')
+          totalLines = (day + 1) * 2
+
+          startLine = randint(0, len(lines) - totalLines)
+
+          finalText = ""
+          for i in range(totalLines) :
+              finalText += lines[startLine + i] + "\n"
+        except:
+          pass
 
     return finalText
 
