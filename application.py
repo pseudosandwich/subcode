@@ -7,6 +7,11 @@ from flask import Flask, request, render_template, flash, g
 from contextlib import closing
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from github import Github
+import json
+import base64
+from random import randint
+
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -88,8 +93,46 @@ def send_one_message(receiver):
         data={"from": "Mailgun Sandbox <postmaster@sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org>",
               "to": receiver,
               "subject": "New code from Subcode",
-              "text": "Some code!"})
+              "text": "Here's some new Swift code: " + getSomeCode(5)})
     print('mailed things with response', response)
+
+
+#gh = Github("user", "password")
+def makeGithubRequest(url):
+    r = requests.get(url)
+    if(r.ok):
+        allResults = json.loads(r.text or r.content)
+        return allResults
+    else :
+        print("Error in github request", r)
+
+def getSomeCode(day):
+    API_URL = "https://api.github.com/"
+
+    allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:swift\&sort\=stars\&order\=desc')
+    repo = allResults.get('items')[0]
+    owner = repo.get('owner').get('login')
+    name = repo.get('name')
+    branch = repo.get('default_branch')
+
+    searchResults = makeGithubRequest(API_URL + 'search/code?q=swift+language:swift+extension:swift+repo:' + owner + '/' + name)
+    result = searchResults.get('items')[0]
+    path = result.get('path')
+
+    fileResult = makeGithubRequest(API_URL + "repos/" + owner + "/" + name + "/contents/" + path)
+    file = fileResult.get('content')
+    plaintext = base64.b64decode(file).decode()
+
+    lines = plaintext.split('\n')
+    totalLines = (day + 1) * 2
+
+    startLine = randint(0, len(lines) - totalLines)
+
+    finalText = ""
+    for i in range(totalLines) :
+        finalText += lines[startLine + i] + "\n"
+
+    return finalText
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
