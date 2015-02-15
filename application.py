@@ -6,10 +6,7 @@ import time
 from flask import Flask, request, render_template, flash, g
 from contextlib import closing
 import os
-from apscheduler.scheduler import Scheduler
-
-def tick():
-    print('Tick! The time is: %s' % datetime.now())
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -71,21 +68,11 @@ def show_entries():
 
 
 #send mail
-"""sched = Scheduler()
-sched.daemonic = False
-sched.start()
-
 def engine():
     db = connect_db()
-
-    print("Sending mail at", datetime.datetime.now())
-    send_mail(db)
-    time.sleep(20)
-
+    print("Sending mail at", datetime.now())
+    #send_mail(db)
     db.close()
-
-# Schedules job_function to be run once each minute
-sched.add_cron_job(engine,  minute='0-59')"""
 
 def send_mail(db):
     cur = db.execute('select email, language from users order by id desc')
@@ -105,11 +92,12 @@ def send_one_message(receiver):
     print('mailed things with response', response)
 
 if __name__ == "__main__":
-    app.run(debug=True)
     scheduler = BackgroundScheduler()
-    scheduler.add_job(tick, 'interval', seconds=5)
+    scheduler.add_job(engine, 'interval', minutes=1)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+
+    app.run(debug=True)
 
     try:
         # This is here to simulate application activity (which keeps the main thread alive).
