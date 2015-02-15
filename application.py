@@ -97,7 +97,7 @@ def send_one_message(receiver, day, language):
             data={"from": "Jackson de Campos <jackson@jacksondc.com>",
                   "to": receiver,
                   "subject": "New " + language + " code from Subcode",
-                  "html": "We have some new " + language + " code for you:\n\n<code>" +  + "</code>"
+                  "html": "We have some new " + language + " code for you:\n\n<code>" + code + "</code>"
                   })
         print('mailed things with response', response)
     else :
@@ -135,6 +135,8 @@ def getFileFromLanguage(language):
 
 def makeGithubRequest(url, escape):
 
+    print("url", url, "escape", escape)
+
     if not '?' in url :
         url += '?'
 
@@ -144,7 +146,6 @@ def makeGithubRequest(url, escape):
     else :
         fullUrl = url + '&client_id=' + config.GITHUB_ID + '&client_secret=' + config.GITHUB_SECRET
 
-    print(fullUrl)
     r = requests.get(fullUrl)
 
     if(r.ok):
@@ -162,9 +163,9 @@ def getSomeCode(day, language):
         try:
           API_URL = "https://api.github.com/"
 
-          allResults = makeGithubRequest(API_URL + 'search/repositories?q=swift\&language:' + language
-                                                 + '\&sort\=stars\&order\=desc', True)
-
+          print('before')
+          allResults = makeGithubRequest(API_URL + 'search/repositories?q=' + language + '\&language:' + language + '\&sort\=stars\&order\=desc', True)
+          print('after')
           repos = allResults.get('items')
           repo = repos[randint(0, len(repos)-1)]
 
@@ -173,7 +174,7 @@ def getSomeCode(day, language):
           branch = repo.get('default_branch')
 
           extension = getFileFromLanguage(language)
-          searchResults = makeGithubRequest(API_URL + 'search/code?q=' + language + '+language:' + language
+          searchResults = makeGithubRequest(API_URL + 'search/code?q=' + language
                                             + '+extension:' + extension + '+repo:' + owner + '/' + name, False)
 
           results = searchResults.get('items')
@@ -193,14 +194,14 @@ def getSomeCode(day, language):
           for i in range(totalLines) :
               finalText += lines[startLine + i] + "\n"
 
-          """print("ft", finalText)
+          print("ft", finalText)
           print("lines", lines)
           print("path", path)
           print("extension", extension)
           print("owner", owner)
-          print("name", name)"""
-        except:
-          pass
+          print("name", name)
+        except Exception as e:
+          print(e)
 
     return finalText
 
