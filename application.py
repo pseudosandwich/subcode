@@ -11,6 +11,8 @@ import json
 import base64
 from random import randint
 import config
+import re
+import pickle
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -57,8 +59,19 @@ def get_email():
     language = request.form['language']
     print("added user with email", text, "language", language)
 
-    g.db.execute( 'insert or ignore into users (email, timestep, language) values (?, ?, ?)',
-                  [ request.form['email'], 0, request.form['language'] ] )
+    languages = [];
+    oldLanguagesCursor = g.db.execute('select language from users where email=?', (text,))
+    for entry in oldLanguagesCursor:
+        #Alawys only one entry
+        languageString = entry[0];
+        print(languageString);
+        languages = pickle.loads(languageString)
+    print(languages)
+    if language not in languages:
+        languages.append(language)
+
+    g.db.execute( 'insert or replace into users (email, timestep, language) values (?, ?, ?)',
+                  [ request.form['email'], 0, pickle.dumps(languages) ] )
     g.db.commit()
     flash('Thanks for signing up!')
 
