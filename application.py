@@ -85,7 +85,7 @@ def send_mail(db):
         print("Email:", entry.get('email'), "timestep", entry.get('timestep'), "Language", entry.get('language'), "id", entry.get('id'));
         send_one_message(entry.get('email'), entry.get('timestep'), entry.get('language'))
         #update timestep
-        db.execute('update users set timestep=timestep+1 where id=?', entry.get('id'))
+        db.execute('update users set timestep=timestep+1 where id=?', [entry.get('id')])
     return "Mailed!"
 
 def send_one_message(receiver, day, language):
