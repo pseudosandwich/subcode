@@ -11,6 +11,8 @@ import json
 import base64
 from random import randint
 import config
+import re
+import pickle
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -53,39 +55,94 @@ def hello():
 def get_email():
     error = None
 
-    text = request.form['email']
+    email = request.form['email']
     language = request.form['language']
-    print("added user with email", text, "language", language)
+    print("added user with email", email, "language", language)
 
-    g.db.execute( 'insert or ignore into users (email, timestep, language) values (?, ?, ?)',
-                  [ request.form['email'], 0, request.form['language'] ] )
-    g.db.commit()
-    flash('Thanks for signing up!')
+    languages = languagesByEmail(email)
+    if languages == []:
+        #New User
+        insertLanguagesByEmail(email, [language, 0])
+    else:
+        #Old User
+        #Test that language is not already in any of the entires
+        if all(language not in entry for entry in languages):
+            languages.append([language,0])
+        updateLanguagesByEmail(email, languages)
+        flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
 
 @app.route('/db')
 def show_entries():
-    cur = g.db.execute('select email, language from users order by id desc')
-    entries = [dict(email=row[0], language=row[1]) for row in cur.fetchall()]
+    cur = g.db.execute('select email, languages from users order by id desc')
+    ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
+    entries = [dict(email=row[0], languages=pickle.loads(row[1])) for row in cur.fetchall()]
+    print(entries)
     return render_template('db.html', entries=entries)
 
 
 #send mail
 def engine():
-    db = connect_db()
-    print("Sending mail at", datetime.now())
-    print(send_mail(db))
-    db.close()
+    with app.app_context():
+        g.db = connect_db()
+        print("Sending mail at", datetime.now())
+        print(send_mail(g.db))
+        g.db.close()
+
+#retrieve languages by email
+def languagesByEmail(email):
+    cursor = g.db.execute('select languages from users where email=?', (email,))
+    return languagesByLanguageCursor(cursor)
+
+#retrieve languages by ID
+def languagesByID(id):
+    cursor = g.db.execute('select languages from users where id=?', (id,))
+    return languagesByLanguageCursor(cursor)
+
+#used to make retrieve languages by email and ID DRY
+def languagesByLanguageCursor(cursor):
+    languages = []
+    entry = cursor.fetchone()
+    if entry:
+        languageString = entry[0]
+        languages = pickle.loads(languageString)
+        return languages
+    else:
+        return []
+
+#insert languages by email
+def insertLanguagesByEmail(email, languages):
+    g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, pickle.dumps(languages)))
+    g.db.commit()
+
+def updateLanguagesByEmail(email, languages):
+    g.db.execute('update users set languages = ? where email = ?', (pickle.dumps(languages), email))
+    g.db.commit()
+
+#update languages by ID
+def updateLanguagesByID(id, languages):
+    g.db.execute('update users set languages = ? where id = ?', (pickle.dumps(languages), id))
+    g.db.commit()
+
+#increment timestep by id, language
+def incrementTimestep(id, language):
+    languages = languagesByID(id)
+    for i in range(len(languages)):
+        if languages[i][0] == language:
+            languages[i][1] += 1;
+    updateLanguagesByID(id, languages)
+
 
 def send_mail(db):
-    cur = db.execute('select id, email, language, timestep from users order by id desc')
-    entries = [dict(id=row[0], email=row[1], language=row[2], timestep=row[3]) for row in cur.fetchall()]
-    for entry in entries :
-        print("Email:", entry.get('email'), "timestep", entry.get('timestep'), "Language", entry.get('language'), "id", entry.get('id'));
-        send_one_message(entry.get('email'), entry.get('timestep'), entry.get('language'))
-        #update timestep
-        db.execute('update users set timestep=timestep+1 where id=?', [entry.get('id')])
+    cur = db.execute('select id, email, languages from users order by id desc')
+    entries = [dict(id=row[0], email=row[1], languages=pickle.loads(row[2])) for row in cur.fetchall()]
+    for entry in entries:
+        for language in entry.get('languages'):
+            print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "id", entry.get('id'));
+            send_one_message(entry.get('email'), language[1], language[0])
+            #update timestep
+            incrementTimestep(entry.get('id'), language[0])
     return "Mailed!"
 
 def send_one_message(receiver, day, language):
