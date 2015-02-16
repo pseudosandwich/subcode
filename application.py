@@ -12,7 +12,7 @@ import base64
 from random import randint
 import config
 import re
-import pickle
+import json
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -62,14 +62,15 @@ def get_email():
     languages = languagesByEmail(email)
     if languages == []:
         #New User
-        insertLanguagesByEmail(email, [language, 0])
+        insertLanguagesByEmail(email, [[language, 0]])
     else:
         #Old User
         #Test that language is not already in any of the entires
         if all(language not in entry for entry in languages):
             languages.append([language,0])
         updateLanguagesByEmail(email, languages)
-        flash('Thanks for signing up!')
+
+    flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
 
@@ -77,7 +78,7 @@ def get_email():
 def show_entries():
     cur = g.db.execute('select email, languages from users order by id desc')
     ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
-    entries = [dict(email=row[0], languages=pickle.loads(row[1])) for row in cur.fetchall()]
+    entries = [dict(email=row[0], languages=json.loads(row[1])) for row in cur.fetchall()]
     print(entries)
     return render_template('db.html', entries=entries)
 
@@ -106,23 +107,23 @@ def languagesByLanguageCursor(cursor):
     entry = cursor.fetchone()
     if entry:
         languageString = entry[0]
-        languages = pickle.loads(languageString)
+        languages = json.loads(languageString)
         return languages
     else:
         return []
 
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
-    g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, pickle.dumps(languages)))
+    g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, json.dumps(languages)))
     g.db.commit()
 
 def updateLanguagesByEmail(email, languages):
-    g.db.execute('update users set languages = ? where email = ?', (pickle.dumps(languages), email))
+    g.db.execute('update users set languages = ? where email = ?', (json.dumps(languages), email))
     g.db.commit()
 
 #update languages by ID
 def updateLanguagesByID(id, languages):
-    g.db.execute('update users set languages = ? where id = ?', (pickle.dumps(languages), id))
+    g.db.execute('update users set languages = ? where id = ?', (json.dumps(languages), id))
     g.db.commit()
 
 #increment timestep by id, language
@@ -136,7 +137,7 @@ def incrementTimestep(id, language):
 
 def send_mail(db):
     cur = db.execute('select id, email, languages from users order by id desc')
-    entries = [dict(id=row[0], email=row[1], languages=pickle.loads(row[2])) for row in cur.fetchall()]
+    entries = [dict(id=row[0], email=row[1], languages=json.loads(row[2])) for row in cur.fetchall()]
     for entry in entries:
         for language in entry.get('languages'):
             print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "id", entry.get('id'));
@@ -264,7 +265,7 @@ def getSomeCode(day, language):
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'interval', days=1)
+    scheduler.add_job(engine, 'interval', seconds=10)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
