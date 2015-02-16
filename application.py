@@ -60,20 +60,23 @@ def get_email():
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
-    #Test that language is not already in any of the entires
-    if all(language not in entry for entry in languages):
-        languages.append([language,0])
-    print(languages)
-
-    insertLanguagesByEmail(email, languages)
-    flash('Thanks for signing up!')
+    if languages == []:
+        #New User
+        insertLanguagesByEmail(email, [language, 0])
+    else:
+        #Old User
+        #Test that language is not already in any of the entires
+        if all(language not in entry for entry in languages):
+            languages.append([language,0])
+        updateLanguagesByEmail(email, languages)
+        flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
 
 @app.route('/db')
 def show_entries():
     cur = g.db.execute('select email, languages from users order by id desc')
-    ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls will be network heavy
+    ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
     entries = [dict(email=row[0], languages=pickle.loads(row[1])) for row in cur.fetchall()]
     print(entries)
     return render_template('db.html', entries=entries)
@@ -111,6 +114,10 @@ def languagesByLanguageCursor(cursor):
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
     g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, pickle.dumps(languages)))
+    g.db.commit()
+
+def updateLanguagesByEmail(email, languages):
+    g.db.execute('update users set languages = ? where email = ?', (pickle.dumps(languages), email))
     g.db.commit()
 
 #update languages by ID
@@ -256,7 +263,7 @@ def getSomeCode(day, language):
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'interval', seconds=10)
+    scheduler.add_job(engine, 'interval', minutes=1)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
