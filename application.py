@@ -209,7 +209,7 @@ def makeGithubRequest(url, escape):
         allResults = json.loads(r.text or r.content)
         return allResults
     else :
-        print("Error in github request", r.content())
+        print("Error in github request", r.content)
 
 def getSomeCode(day, language):
     finalText = ""
@@ -264,7 +264,7 @@ def getSomeCode(day, language):
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'interval', days=1)
+    scheduler.add_job(engine, 'interval', seconds=10)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
