@@ -264,7 +264,7 @@ def getSomeCode(day, language):
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'interval', seconds=10)
+    scheduler.add_job(engine, 'interval', days=1)
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
