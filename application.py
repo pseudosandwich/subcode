@@ -31,32 +31,11 @@ db = SQLAlchemy(app)
 
 from models import *
 #database initialization
-"""
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+
 
 def init_db():
     db.create_all()
-    with closing(connect_db()) as db:
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-"""
 
-
-"""
-#before an http request, open a database connection
-@app.before_request
-def before_request():
-    g.db = connect_db() # the g object does magical things to store data across one request
-
-#after an http request, close the database connection
-@app.teardown_request
-def teardown_request(exception):
-    db = getattr(g, 'db', None)
-    if db is not None:
-        db.close()
-"""
 
 @app.route("/")
 def hello():
@@ -98,13 +77,7 @@ def show_entries():
 def engine():
     print("Sending mail at", datetime.now())
     print(send_mail(db))
-    """
-    with app.app_context():
-        g.db = connect_db()
-        print("Sending mail at", datetime.now())
-        print(send_mail(g.db))
-        g.db.close()
-    """
+
 #retrieve languages by email
 def languagesByEmail(email):
     entry = User.query.filter_by(email=email).first()
@@ -113,10 +86,7 @@ def languagesByEmail(email):
     else:
         return None
 
-    """
-    cursor = g.db.execute('select languages from users where email=?', (email,))
-    return languagesByLanguageCursor(cursor)
-    """
+
 
 #retrieve languages by ID
 def languagesByID(id):
@@ -125,10 +95,7 @@ def languagesByID(id):
         return json.loads(entry.languages)
     else:
         return None
-    """
-    cursor = g.db.execute('select languages from users where id=?', (id,))
-    return languagesByLanguageCursor(cursor)
-    """
+
 
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
@@ -136,20 +103,13 @@ def insertLanguagesByEmail(email, languages):
     db.session.add(user)
     db.session.commit()
 
-    """
-    g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, json.dumps(languages)))
-    g.db.commit()
-    """
 
 def updateLanguagesByEmail(email, languages):
     entry = User.query.filter_by(email=email).first()
     entry.languages = json.dumps(languages)
     db.session.commit()
 
-    """
-    g.db.execute('update users set languages = ? where email = ?', (json.dumps(languages), email))
-    g.db.commit()
-    """
+
 
 #update languages by ID
 def updateLanguagesByID(id, languages):
@@ -157,10 +117,7 @@ def updateLanguagesByID(id, languages):
     entry.languages = json.dumps(languages)
     db.session.commit()
 
-    """
-    g.db.execute('update users set languages = ? where id = ?', (json.dumps(languages), id))
-    g.db.commit()
-    """
+
 
 #increment timestep by id, language
 def incrementTimestep(id, language):
@@ -173,8 +130,6 @@ def incrementTimestep(id, language):
 
 def send_mail(db):
     cur = User.query.all()
-    for row in cur:
-        print("Row:", row.languages)
     entries = [dict(id=row.id, email=row.email, languages=json.loads(row.languages)) for row in cur]
     for entry in entries:
         for language in entry.get('languages'):
