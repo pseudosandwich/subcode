@@ -220,13 +220,12 @@ def getSomeCode(day, language):
     safety = 0
 
     while(len(finalText) == 0 and safety < 5) :
+        time.sleep(12)
         safety += 1 #just to make sure we don't go forever
         try:
           API_URL = "https://api.github.com/"
 
-          print('before')
           allResults = makeGithubRequest(API_URL + 'search/repositories?q=' + language + '\&language:' + language + '\&sort\=stars\&order\=desc', True)
-          print('after')
           repos = allResults.get('items')
           repo = repos[randint(0, len(repos)-1)]
 
@@ -235,7 +234,7 @@ def getSomeCode(day, language):
           branch = repo.get('default_branch')
 
           extension = getFileFromLanguage(language)
-          searchResults = makeGithubRequest(API_URL + 'search/code?q=' + language
+          searchResults = makeGithubRequest(API_URL + 'search/code?q=' + "%20"
                                             + '+extension:' + extension + '+repo:' + owner + '/' + name, False)
 
           results = searchResults.get('items')
