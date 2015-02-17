@@ -3,6 +3,8 @@ html, body {
   width:100%;
   overflow: hidden;
   margin:0;
+  -webkit-animation: fadein 0.5s;
+          animation: fadein 0.5s;
 }
 
 * {
@@ -118,6 +120,17 @@ h1, p {
       -ms-flex-wrap: wrap;
           flex-wrap: wrap;
 }
+
+@-webkit-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 
 /* TYPEAHEAD */
 
