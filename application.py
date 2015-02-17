@@ -24,7 +24,7 @@ except ImportError:
     GITHUB_SECRET = os.environ['GITHUB_SECRET']
     MAILGUN_KEY = os.environ['MAILGUN_KEY']
     SQLALCHEMY_DATABASE_URI = os.environ['SQLALCHEMY_DATABASE_URI']
-    DEBUG = os.environ['DEBUG']
+    DEBUG = (os.environ['DEBUG'] == "True")
     SECRET_KEY = os.environ['SECRET_KEY']
     USERNAME = os.environ['USERNAME']
     PASSWORD = os.environ['PASSWORD']
@@ -72,6 +72,7 @@ def get_email():
     flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
+
 if DEBUG:
     @app.route('/db')
     def show_entries():
