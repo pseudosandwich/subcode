@@ -23,6 +23,7 @@ except ImportError:
     GITHUB_ID = os.environ['GITHUB_ID']
     GITHUB_SECRET = os.environ['GITHUB_SECRET']
     MAILGUN_API_KEY = os.environ['MAILGUN_API_KEY']
+    MAILGUN_URL = os.environ['MAILGUN_URL']
     SQLALCHEMY_DATABASE_URI = os.environ['SQLALCHEMY_DATABASE_URI']
     DEBUG = (os.environ['DEBUG'] == "True")
     SECRET_KEY = os.environ['SECRET_KEY']
@@ -152,7 +153,7 @@ def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
     if code :
         response = requests.post(
-            "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
+            "https://api.mailgun.net/v2/"+MAILGUN_URL+"/messages",
             auth=("api", MAILGUN_API_KEY),
             data={"from": "Jackson de Campos <jackson@jacksondc.com>",
                   "to": receiver,
