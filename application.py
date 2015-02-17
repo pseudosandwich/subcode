@@ -72,13 +72,13 @@ def get_email():
     flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
-
-@app.route('/db')
-def show_entries():
-    cur = User.query.all()
-    ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
-    entries = [dict(email=row.email, languages=json.loads(row.languages)) for row in cur]
-    return render_template('db.html', entries=entries)
+if DEBUG:
+    @app.route('/db')
+    def show_entries():
+        cur = User.query.all()
+        ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
+        entries = [dict(email=row.email, languages=json.loads(row.languages)) for row in cur]
+        return render_template('db.html', entries=entries)
 
 
 #send mail
@@ -272,7 +272,6 @@ if __name__ == "__main__":
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
     #send_one_message('jacksondecampos@gmail.com', 10, 'Swift');
-
     app.run(debug=DEBUG, use_reloader=False)
 
     try:
