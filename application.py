@@ -14,6 +14,11 @@ import json
 from flask.ext.sqlalchemy import SQLAlchemy
 import psycopg2
 import os
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.lexers import guess_lexer
+from pygments.formatters import HtmlFormatter
+from pygments.styles import get_style_by_name
 
 #Environment variables:
 try:
@@ -149,16 +154,22 @@ def send_mail(db):
             incrementTimestep(entry.get('id'), language[0])
     return "Mailed!"
 
+#Returns stylesheet for given pygments style
+def styleSheet(style):
+    return "<style type=\"text/css\">" + HtmlFormatter(style=style).get_style_defs() + "\n.container {border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;}" + "</style>"
+
 def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
     if code :
+        formattedCode = highlight(code, guess_lexer(code), HtmlFormatter(linenos=True))
+        print(formattedCode)
         response = requests.post(
             MAILGUN_BASE_URL+"/messages",
             auth=("api", MAILGUN_API_KEY),
             data={"from": "Subcode <smulumudi@gmail.com>",
                   "to": receiver,
                   "subject": "New " + language + " code from Subcode",
-                  "html": "We have some new " + language + " code for you:\n\n<code>" + code + "</code>"
+                  "html": "<head>" + styleSheet('monokai') + "</head>" + "We have some new " + language + " code for you:\n\n<div class=\"container hll\">" + formattedCode + "</code>"
                   })
         print('mailed things with response', response)
     else :
@@ -266,6 +277,7 @@ def getSomeCode(day, language):
     return finalText
 
 if __name__ == "__main__":
+    engine()
     scheduler = BackgroundScheduler()
     scheduler.add_job(engine, 'interval', days=1)
     scheduler.start()
