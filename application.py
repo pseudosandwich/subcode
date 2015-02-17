@@ -1,5 +1,4 @@
 # all the imports
-import sqlite3
 import requests
 from datetime import datetime
 import time
@@ -13,9 +12,12 @@ from random import randint
 import config
 import re
 import json
+from flask.ext.sqlalchemy import SQLAlchemy
+import psycopg2
+
 
 # configuration
-DATABASE = '/tmp/flaskr.db'
+#DATABASE = '/tmp/flaskr.db'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -23,28 +25,17 @@ PASSWORD = 'default'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
+db = SQLAlchemy(app)
+#IMPORTANT THAT THIS REMAIN AFTER THE DECLERATION OF DB BECAUSE MODELS IMPORTS DB
 
+from models import *
 #database initialization
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+
 
 def init_db():
-    with closing(connect_db()) as db:
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
+    db.create_all()
 
-#before an http request, open a database connection
-@app.before_request
-def before_request():
-    g.db = connect_db() # the g object does magical things to store data across one request
-
-#after an http request, close the database connection
-@app.teardown_request
-def teardown_request(exception):
-    db = getattr(g, 'db', None)
-    if db is not None:
-        db.close()
 
 @app.route("/")
 def hello():
@@ -60,7 +51,7 @@ def get_email():
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
-    if languages == []:
+    if not languages:
         #New User
         insertLanguagesByEmail(email, [[language, 0]])
     else:
@@ -76,55 +67,57 @@ def get_email():
 
 @app.route('/db')
 def show_entries():
-    cur = g.db.execute('select email, languages from users order by id desc')
+    cur = User.query.all()
     ##Being lazy here, but we should eventually implement a good function for taking our querried results and de-pickling them - making individual language by email calls would be network heavy
-    entries = [dict(email=row[0], languages=json.loads(row[1])) for row in cur.fetchall()]
-    print(entries)
+    entries = [dict(email=row.email, languages=json.loads(row.languages)) for row in cur]
     return render_template('db.html', entries=entries)
 
 
 #send mail
 def engine():
-    with app.app_context():
-        g.db = connect_db()
-        print("Sending mail at", datetime.now())
-        print(send_mail(g.db))
-        g.db.close()
+    print("Sending mail at", datetime.now())
+    print(send_mail(db))
 
 #retrieve languages by email
 def languagesByEmail(email):
-    cursor = g.db.execute('select languages from users where email=?', (email,))
-    return languagesByLanguageCursor(cursor)
+    entry = User.query.filter_by(email=email).first()
+    if entry:
+        return json.loads(entry.languages)
+    else:
+        return None
+
+
 
 #retrieve languages by ID
 def languagesByID(id):
-    cursor = g.db.execute('select languages from users where id=?', (id,))
-    return languagesByLanguageCursor(cursor)
-
-#used to make retrieve languages by email and ID DRY
-def languagesByLanguageCursor(cursor):
-    languages = []
-    entry = cursor.fetchone()
+    entry = User.query.filter_by(id=id).first()
     if entry:
-        languageString = entry[0]
-        languages = json.loads(languageString)
-        return languages
+        return json.loads(entry.languages)
     else:
-        return []
+        return None
+
 
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
-    g.db.execute('insert or replace into users (email, languages) values (?, ?)', (email, json.dumps(languages)))
-    g.db.commit()
+    user = User(email, json.dumps(languages))
+    db.session.add(user)
+    db.session.commit()
+
 
 def updateLanguagesByEmail(email, languages):
-    g.db.execute('update users set languages = ? where email = ?', (json.dumps(languages), email))
-    g.db.commit()
+    entry = User.query.filter_by(email=email).first()
+    entry.languages = json.dumps(languages)
+    db.session.commit()
+
+
 
 #update languages by ID
 def updateLanguagesByID(id, languages):
-    g.db.execute('update users set languages = ? where id = ?', (json.dumps(languages), id))
-    g.db.commit()
+    entry = User.query.filter_by(id=id).first()
+    entry.languages = json.dumps(languages)
+    db.session.commit()
+
+
 
 #increment timestep by id, language
 def incrementTimestep(id, language):
@@ -136,8 +129,8 @@ def incrementTimestep(id, language):
 
 
 def send_mail(db):
-    cur = db.execute('select id, email, languages from users order by id desc')
-    entries = [dict(id=row[0], email=row[1], languages=json.loads(row[2])) for row in cur.fetchall()]
+    cur = User.query.all()
+    entries = [dict(id=row.id, email=row.email, languages=json.loads(row.languages)) for row in cur]
     for entry in entries:
         for language in entry.get('languages'):
             print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "id", entry.get('id'));
@@ -267,6 +260,7 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(engine, 'interval', days=1)
     scheduler.start()
+
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
     #send_one_message('jacksondecampos@gmail.com', 10, 'Swift');
