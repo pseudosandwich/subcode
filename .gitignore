@@ -51,3 +51,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+.Python
+pip-selfcheck.json
+include/python3.4m
