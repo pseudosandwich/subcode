@@ -9,23 +9,31 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import json
 import base64
 from random import randint
-import config
 import re
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
 import psycopg2
+import os
+
+#Environment variables:
+try:
+    from config import *
+except ImportError:
+    print("No config file - using environment vairables")
+    GITHUB_ID = os.environ['GITHUB_ID']
+    GITHUB_SECRET = os.environ['GITHUB_SECRET']
+    MAILGUN_KEY = os.environ['MAILGUN_KEY']
+    SQLALCHEMY_DATABASE_URI = os.environ['SQLALCHEMY_DATABASE_URI']
+    DEBUG = os.environ['DEBUG']
+    SECRET_KEY = os.environ['SECRET_KEY']
+    USERNAME = os.environ['USERNAME']
+    PASSWORD = os.environ['PASSWORD']
 
 
-# configuration
-#DATABASE = '/tmp/flaskr.db'
-DEBUG = True
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #IMPORTANT THAT THIS REMAIN AFTER THE DECLERATION OF DB BECAUSE MODELS IMPORTS DB
 
@@ -144,7 +152,7 @@ def send_one_message(receiver, day, language):
     if code :
         response = requests.post(
             "https://api.mailgun.net/v2/sandboxc8fa348a2c6240008434768cb8f374cc.mailgun.org/messages",
-            auth=("api", config.MAILGUN_KEY),
+            auth=("api", MAILGUN_KEY),
             data={"from": "Jackson de Campos <jackson@jacksondc.com>",
                   "to": receiver,
                   "subject": "New " + language + " code from Subcode",
@@ -193,9 +201,9 @@ def makeGithubRequest(url, escape):
 
     fullUrl = ""
     if escape:
-        fullUrl = url + '\&client_id\=' + config.GITHUB_ID + '\&client_secret\=' + config.GITHUB_SECRET
+        fullUrl = url + '\&client_id\=' + GITHUB_ID + '\&client_secret\=' + GITHUB_SECRET
     else :
-        fullUrl = url + '&client_id=' + config.GITHUB_ID + '&client_secret=' + config.GITHUB_SECRET
+        fullUrl = url + '&client_id=' + GITHUB_ID + '&client_secret=' + GITHUB_SECRET
 
     r = requests.get(fullUrl)
 
@@ -265,7 +273,7 @@ if __name__ == "__main__":
 
     #send_one_message('jacksondecampos@gmail.com', 10, 'Swift');
 
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=DEBUG, use_reloader=False)
 
     try:
         # This is here to simulate application activity (which keeps the main thread alive).
