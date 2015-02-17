@@ -13,6 +13,7 @@ import config
 import re
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
+import psycopg2
 
 
 # configuration
@@ -80,7 +81,6 @@ def get_email():
         if all(language not in entry for entry in languages):
             languages.append([language,0])
         updateLanguagesByEmail(email, languages)
-        flash('Thanks for signing up!')
 
     flash('Thanks for signing up!')
 
