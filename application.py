@@ -15,7 +15,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import psycopg2
 import os
 from pygments import highlight
-from pygments.lexers import get_lexer_by_name
+from pygments.lexers import get_lexer_for_filename
 from pygments.lexers import guess_lexer
 from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
@@ -161,7 +161,7 @@ def styleSheet(style):
 def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
     if code :
-        formattedCode = highlight(code, guess_lexer(code), HtmlFormatter(linenos=True))
+        formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=True))
         print(formattedCode)
         response = requests.post(
             MAILGUN_BASE_URL+"/messages",
