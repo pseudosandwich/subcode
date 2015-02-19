@@ -170,7 +170,7 @@ def send_one_message(receiver, day, language):
             data={"from": "Subcode <smulumudi@gmail.com>",
                   "to": receiver,
                   "subject": "New " + language + " code from Subcode",
-                  "html": "<head>" + styleSheet(PYGMENTS_STYLE) + "</head>" + "We have some new " + language + " code for you:\n\n<div class=\"container hll\">" + formattedCode + "</code>"
+                  "html": "<head>" + styleSheet(PYGMENTS_STYLE) + "</head>" + "We have some new " + language + " code for you:\n\n<div class=\"container hll\">" + formattedCode + "</div>"
                   })
         print('mailed things with response', response)
     else :
