@@ -29,8 +29,9 @@ except ImportError:
     SECRET_KEY = os.environ['SECRET_KEY']
     USERNAME = os.environ['USERNAME']
     PASSWORD = os.environ['PASSWORD']
-    ENGINE_HOUR = os.environ['ENGINE_HOUR']
-    ENGINE_MINUTE = os.environ['ENGINE_MINUTE']
+    if DEBUG:
+        ENGINE_HOUR = os.environ['ENGINE_HOUR']
+        ENGINE_MINUTE = os.environ['ENGINE_MINUTE']
 
 
 
@@ -268,9 +269,10 @@ def getSomeCode(day, language):
     return finalText
 
 if __name__ == "__main__":
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(engine, 'cron', hour=ENGINE_HOUR, minute=ENGINE_MINUTE)
-    scheduler.start()
+    if DEBUG:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(engine, 'cron', hour=ENGINE_HOUR, minute=ENGINE_MINUTE)
+        scheduler.start()
 
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
