@@ -11,17 +11,19 @@
 </head>
 
 <body>
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class=flashes>
-      {% for message in messages %}
-      <p class="flash">{{ message }}</p>
-      {% endfor %}
+  <div class="center">
+    <div class="main">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class=flashes>
+          {% for message in messages %}
+          <p class="flash">{{ message }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
     </div>
-    {% endif %}
-  {% endwith %}
-  <div class="main">
-    {% block content %}{% endblock %}
   </div>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
