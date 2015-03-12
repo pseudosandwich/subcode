@@ -278,7 +278,6 @@ def getSomeCode(day, language):
     return finalText
 
 if __name__ == "__main__":
-    engine()
     scheduler = BackgroundScheduler()
     scheduler.add_job(engine, 'interval', days=1)
     scheduler.start()
