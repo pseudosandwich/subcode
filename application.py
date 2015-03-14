@@ -2,7 +2,7 @@
 import requests
 from datetime import datetime
 import time
-from flask import Flask, request, render_template, flash, g
+from flask import Flask, request, render_template, flash, g, url_for, redirect
 from contextlib import closing
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -35,6 +35,7 @@ except ImportError:
     USERNAME = os.environ['USERNAME']
     PASSWORD = os.environ['PASSWORD']
     PYGMENTS_STYLE = os.environ['PYGMENTS_STYLE']
+    BASE_URL = os.environ['BASE_URL']
     if DEBUG:
         ENGINE_HOUR = os.environ['ENGINE_HOUR']
         ENGINE_MINUTE = os.environ['ENGINE_MINUTE']
@@ -69,7 +70,7 @@ def get_email():
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
-    
+
     if languages == None:
         #New User
         insertLanguagesByEmail(email, [[language, 0]])
@@ -84,12 +85,10 @@ def get_email():
 
     return render_template('index.html', error=error)
 
-@app.route('/unsubscribe', methods=['POST'])
-def unsubcribe():
+@app.route('/unsubscribe/<email>/<language>')
+def unsubscribe(email, language):
     error = None
 
-    email = request.form['email']
-    language = request.form['language']
     print("unsubscribe user with email", email, "language", language)
 
     languages = languagesByEmail(email)
@@ -101,7 +100,7 @@ def unsubcribe():
     updateLanguagesByEmail(email, languages);
 
     flash("You have been unsubscribed from " + str(language))
-    return render_template('index.html', error=error)
+    return redirect(url_for('hello'))
 
 
 if DEBUG:
@@ -183,17 +182,29 @@ def styleSheet(style):
 def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
     if code :
-        formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=True))
-        print(formattedCode)
-        response = requests.post(
-            MAILGUN_BASE_URL+"/messages",
-            auth=("api", MAILGUN_API_KEY),
-            data={"from": "Subcode <smulumudi@gmail.com>",
-                  "to": receiver,
-                  "subject": "New " + language + " code from Subcode",
-                  "html": "<head>" + styleSheet(PYGMENTS_STYLE) + "</head>" + "We have some new " + language + " code for you:\n\n<div class=\"container hll\">" + formattedCode + "</div>"
-                  })
-        print('mailed things with response', response)
+        with app.test_request_context():
+            formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=True))
+            print(formattedCode)
+            response = requests.post(
+                MAILGUN_BASE_URL+"/messages",
+                auth=("api", MAILGUN_API_KEY),
+                data={"from": "Subcode <smulumudi@gmail.com>",
+                      "to": receiver,
+                      "subject": "New " + language + " code from Subcode",
+                      "html": '''
+                      <head>
+                        %(styleSheet)s
+                      </head>
+                      <body>
+                      We have some new %(language)s code for you:
+
+                      <div class=\"container hll\">
+                      %(formattedCode)s
+                      </div>
+                      <a href=%(unsubscribeURL)s>Unsubscribe</a>
+                      ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', email=receiver, language=language)}
+                      })
+            print('mailed things with response', response)
     else :
         print("No code! Uh-oh!")
 
