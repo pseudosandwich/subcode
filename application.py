@@ -96,6 +96,7 @@ def unsubscribe(email, language):
     for i in range(len(languages)):
         if languages[i][0] == language:
             del languages[i]
+            break
 
     updateLanguagesByEmail(email, languages);
 
