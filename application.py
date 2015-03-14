@@ -67,6 +67,10 @@ def get_email():
 
     email = request.form['email']
     language = request.form['language']
+
+    if not email or not language:
+        return render_template('index.html')
+        
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
