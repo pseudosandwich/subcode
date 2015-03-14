@@ -177,7 +177,23 @@ def send_mail(db):
 
 #Returns stylesheet for given pygments style
 def styleSheet(style):
-    return "<style type=\"text/css\">" + HtmlFormatter(style=style).get_style_defs() + "\n.container {border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;}" + "</style>"
+    return '''<style type=\"text/css\">
+        a
+        {
+          color: black;
+          text-decoration: none;
+        }
+        div.unsubscribe
+        {
+          display: inline-block;
+          background:transparent;
+          border:1px solid #ddd;
+          border-radius:4px;
+          margin:0 auto;
+          margin:0.5rem;
+          padding:0.5rem;
+        }''' \
+        + HtmlFormatter(style=style).get_style_defs() + "\n.container {border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;}" + "</style>"
 
 def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
@@ -201,7 +217,9 @@ def send_one_message(receiver, day, language):
                       <div class=\"container hll\">
                       %(formattedCode)s
                       </div>
-                      <a href=%(unsubscribeURL)s>Unsubscribe</a>
+                      <div class="buttons">
+                      <a href=%(unsubscribeURL)s><div class="unsubscribe">Unsubscribe from %(language)s</div></a>
+                      </div>
                       </body>
                       ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', email=receiver, language=language)}
                       })
