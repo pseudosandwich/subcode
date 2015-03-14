@@ -39,12 +39,12 @@ $('form').submit(function(e) {
   //alert('test');
   var email = $('input[name=email]').val();
   if(!validateEmail(email)) {
-    e.stopPropogation();
+    e.preventDefault();
     return;
   }
-  var language = $('input[name=language]').val();
+  var language = $('select[name=language]').val();
   if(!language) {
-    e.stopPropogation();
+    e.preventDefault();
     return;
   }
 });
