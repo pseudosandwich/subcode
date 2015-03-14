@@ -202,6 +202,7 @@ def send_one_message(receiver, day, language):
                       %(formattedCode)s
                       </div>
                       <a href=%(unsubscribeURL)s>Unsubscribe</a>
+                      </body>
                       ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', email=receiver, language=language)}
                       })
             print('mailed things with response', response)
