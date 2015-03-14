@@ -69,7 +69,8 @@ def get_email():
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
-    if not languages:
+    
+    if languages == None:
         #New User
         insertLanguagesByEmail(email, [[language, 0]])
     else:
@@ -82,6 +83,26 @@ def get_email():
     flash('Thanks for signing up!')
 
     return render_template('index.html', error=error)
+
+@app.route('/unsubscribe', methods=['POST'])
+def unsubcribe():
+    error = None
+
+    email = request.form['email']
+    language = request.form['language']
+    print("unsubscribe user with email", email, "language", language)
+
+    languages = languagesByEmail(email)
+
+    for i in range(len(languages)):
+        if languages[i][0] == language:
+            del languages[i]
+
+    updateLanguagesByEmail(email, languages);
+
+    flash("You have been unsubscribed from " + str(language))
+    return render_template('index.html', error=error)
+
 
 if DEBUG:
     @app.route('/db')
@@ -115,20 +136,17 @@ def languagesByID(id):
     else:
         return None
 
-
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
     user = User(email, json.dumps(languages))
     db.session.add(user)
     db.session.commit()
 
-
+#update languages by email
 def updateLanguagesByEmail(email, languages):
     entry = User.query.filter_by(email=email).first()
     entry.languages = json.dumps(languages)
     db.session.commit()
-
-
 
 #update languages by ID
 def updateLanguagesByID(id, languages):
