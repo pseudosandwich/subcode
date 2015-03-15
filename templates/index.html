@@ -1,44 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Subcode{% endblock %}
 {% block content %}
-  <div class="center">
-    <div class="content">
-      <h1>Subcode</h1>
-      <form action="." method="POST">
-        <input type="text" name="email" placeholder="john@example.com" autocapitalize="off" autocorrect="off" required/>
-        <!--<div id="language">
-          <input type="text" class="typeahead">
-        </div>-->
-        <select name="language">
-          <option value="ActionScript">ActionScript</option>
-          <option value="C">C</option>
-          <option value="C#">C#</option>
-          <option value="C++">C++</option>
-          <option value="Clojure">Clojure</option>
-          <option value="CoffeeScript">CoffeeScript</option>
-          <option value="Common Lisp">Common Lisp</option>
-          <option value="CSS">CSS</option>
-          <option value="Diff">Diff</option>
-          <option value="Emacs Lisp">Emacs Lisp</option>
-          <option value="Erlang">Erlang</option>
-          <option value="Haskell">Haskell</option>
-          <option value="HTML">HTML</option>
-          <option value="Java">Java</option>
-          <option value="JavaScript">JavaScript</option>
-          <option value="Lua">Lua</option>
-          <option value="Objective-C">Objective-C</option>
-          <option value="Perl">Perl</option>
-          <option value="PHP">PHP</option>
-          <option value="Python">Python</option>
-          <option value="Ruby">Ruby</option>
-          <option value="Scala">Scala</option>
-          <option value="Scheme">Scheme</option>
-          <option value="Swift">Swift</option>
-          <option value="Shell">Shell</option>
-          <option value="SQL">SQL</option>
-        </select>
-        <button type="submit">Sign me up</button>
-      </form>
+  <h1>Subcode</h1>
+  <form action="." method="POST">
+    <input type="text" name="email" placeholder="user@example.com" autocapitalize="off" autocorrect="off"/>
+    <div id="lang" class="lang" name="language" tabindex="1">
+      <span>Language</span>
+      <ul class="dropdown" tabindex="1">
+        <li data-value="ActionScript">ActionScript</li>
+        <li data-value="C">C</li>
+        <li data-value="C#">C#</li>
+        <li data-value="C++">C++</li>
+        <li data-value="Clojure">Clojure</li>
+        <li data-value="CoffeeScript">CoffeeScript</li>
+        <li data-value="Common Lisp">Common Lisp</li>
+        <li data-value="CSS">CSS</li>
+        <li data-value="Diff">Diff</li>
+        <li data-value="Emacs Lisp">Emacs Lisp</li>
+        <li data-value="Erlang">Erlang</li>
+        <li data-value="Haskell">Haskell</li>
+        <li data-value="HTML">HTML</li>
+        <li data-value="Java">Java</li>
+        <li data-value="JavaScript">JavaScript</li>
+        <li data-value="Lua">Lua</li>
+        <li data-value="Objective-C">Objective-C</li>
+        <li data-value="Perl">Perl</li>
+        <li data-value="PHP">PHP</li>
+        <li data-value="Python">Python</li>
+        <li data-value="Ruby">Ruby</li>
+        <li data-value="Scala">Scala</li>
+        <li data-value="Scheme">Scheme</li>
+        <li data-value="Swift">Swift</li>
+        <li data-value="Shell">Shell</li>
+        <li data-value="SQL">SQL</li>
+      </ul>
     </div>
-  </div>
+    <button type="submit">Sign me up</button>
+  </form>
 {% endblock %}

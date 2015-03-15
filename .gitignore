@@ -54,3 +54,7 @@ docs/_build/
 .Python
 pip-selfcheck.json
 include/python3.4m
+
+# Jackson
+.DS_Store
+__pycache__/
