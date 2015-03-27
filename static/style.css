@@ -58,6 +58,7 @@ h1, p {
 }
 
 .flash {
+  font-size: 1.5rem;
   text-align:center;
   background-color:#18e76e;
   padding:0.25rem;
