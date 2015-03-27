@@ -31,9 +31,11 @@ DropDown.prototype = {
   }
 }
 
+var dd;
+
 $(function() {
 
-  var dd = new DropDown( $('#lang') );
+  dd = new DropDown( $('#lang') );
 
   $(document).click(function() {
     // all dropdowns
@@ -49,11 +51,18 @@ $('form').submit(function(e) {
     e.preventDefault();
     return;
   }
-  var language = $('select[name=language]').val();
+  var language = dd.getValue();
   if(!language) {
     e.preventDefault();
     return;
   }
+
+  $('<input />').attr('type', 'hidden')
+          .attr('name', "language")
+          .attr('value', language)
+          .appendTo('form');
+  return true;
+
 });
 
 function validateEmail(email) {
