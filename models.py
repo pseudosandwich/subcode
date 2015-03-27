@@ -4,13 +4,14 @@ from sqlalchemy.dialects.postgresql import JSON
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(), primary_key=True)
     email = db.Column(db.String())
     languages = db.Column(JSON)
 
-    def __init__(self, email, languages):
+    def __init__(self, uuid, email, languages):
+        self.uuid =uuid
         self.email = email
         self.languages = languages
 
     def __repr__(self):
-        return '<id {}>'.format(self.id)
+        return '<id {}>'.format(self.uuid)

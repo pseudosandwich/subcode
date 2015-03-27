@@ -19,6 +19,7 @@ from pygments.lexers import get_lexer_for_filename
 from pygments.lexers import guess_lexer
 from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
+import uuid
 
 #Environment variables:
 try:
@@ -89,20 +90,20 @@ def get_email():
 
     return render_template('index.html', error=error)
 
-@app.route('/unsubscribe/<email>/<language>')
-def unsubscribe(email, language):
+@app.route('/unsubscribe/<uuid>/<language>')
+def unsubscribe(uuid, language):
     error = None
 
-    print("unsubscribe user with email", email, "language", language)
+    print("unsubscribe user with uuid", uuid, "language", language)
 
-    languages = languagesByEmail(email)
+    languages = languagesByUUID(uuid)
 
     for i in range(len(languages)):
         if languages[i][0] == language:
             del languages[i]
             break
 
-    updateLanguagesByEmail(email, languages);
+    updateLanguagesByUUID(uuid, languages);
 
     flash("You have been unsubscribed from " + str(language))
     return redirect(url_for('hello'))
@@ -130,11 +131,17 @@ def languagesByEmail(email):
     else:
         return None
 
+#retrieve UUID by email
+def UUIDByEmail(email):
+    entry = User.query.filter_by(email=email).first()
+    if entry:
+        return entry.uuid
+    else:
+        return None
 
-
-#retrieve languages by ID
-def languagesByID(id):
-    entry = User.query.filter_by(id=id).first()
+#retrieve languages by UUID
+def languagesByUUID(uuid):
+    entry = User.query.filter_by(uuid=uuid).first()
     if entry:
         return json.loads(entry.languages)
     else:
@@ -142,7 +149,7 @@ def languagesByID(id):
 
 #insert languages by email
 def insertLanguagesByEmail(email, languages):
-    user = User(email, json.dumps(languages))
+    user = User(str(uuid.uuid4()), email, json.dumps(languages))
     db.session.add(user)
     db.session.commit()
 
@@ -152,32 +159,32 @@ def updateLanguagesByEmail(email, languages):
     entry.languages = json.dumps(languages)
     db.session.commit()
 
-#update languages by ID
-def updateLanguagesByID(id, languages):
-    entry = User.query.filter_by(id=id).first()
+#update languages by UUID
+def updateLanguagesByUUID(uuid, languages):
+    entry = User.query.filter_by(uuid=uuid).first()
     entry.languages = json.dumps(languages)
     db.session.commit()
 
 
 
-#increment timestep by id, language
-def incrementTimestep(id, language):
-    languages = languagesByID(id)
+#increment timestep by uuid, language
+def incrementTimestep(uuid, language):
+    languages = languagesByUUID(uuid)
     for i in range(len(languages)):
         if languages[i][0] == language:
             languages[i][1] += 1;
-    updateLanguagesByID(id, languages)
+    updateLanguagesByUUID(uuid, languages)
 
 
 def send_mail(db):
     cur = User.query.all()
-    entries = [dict(id=row.id, email=row.email, languages=json.loads(row.languages)) for row in cur]
+    entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages)) for row in cur]
     for entry in entries:
         for language in entry.get('languages'):
-            print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "id", entry.get('id'));
+            print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'));
             send_one_message(entry.get('email'), language[1], language[0])
             #update timestep
-            incrementTimestep(entry.get('id'), language[0])
+            incrementTimestep(entry.get('uuid'), language[0])
     return "Mailed!"
 
 #Returns stylesheet for given pygments style
@@ -226,7 +233,7 @@ def send_one_message(receiver, day, language):
                       <a href=%(unsubscribeURL)s><div class="unsubscribe">Unsubscribe from %(language)s</div></a>
                       </div>
                       </body>
-                      ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', email=receiver, language=language)}
+                      ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
                       })
             print('mailed things with response', response)
     else :
