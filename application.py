@@ -70,7 +70,7 @@ def get_email():
 
     if not email or not language:
         return render_template('index.html')
-        
+
     print("added user with email", email, "language", language)
 
     languages = languagesByEmail(email)
@@ -204,7 +204,7 @@ def send_one_message(receiver, day, language):
     code = getSomeCode(day, language)
     if code :
         with app.test_request_context():
-            formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=True))
+            formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=False))
             print(formattedCode)
             response = requests.post(
                 MAILGUN_BASE_URL+"/messages",
