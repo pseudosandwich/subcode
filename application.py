@@ -90,6 +90,18 @@ def get_email():
 
     return render_template('index.html', error=error)
 
+@app.route('/confirm/<uuid>')
+def confirm(uuid):
+    error = None
+
+    print("confirm user with uuid", uuid)
+
+    confirmByUUID(uuid)
+
+    flash("Your email has been confirmed")
+    return redirect(url_for('hello'))
+
+
 @app.route('/unsubscribe/<uuid>/<language>')
 def unsubscribe(uuid, language):
     error = None
@@ -122,6 +134,12 @@ if DEBUG:
 def engine():
     print("Sending mail at", datetime.now())
     print(send_mail(db))
+
+#confirm by UUID
+def confirmByUUID(uuid):
+    entry = User.query.filter_by(uuid=uuid).first()
+    entry.confirmed = True
+    db.session.commit()
 
 #retrieve languages by email
 def languagesByEmail(email):
@@ -178,13 +196,14 @@ def incrementTimestep(uuid, language):
 
 def send_mail(db):
     cur = User.query.all()
-    entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages)) for row in cur]
+    entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages), confirmed=row.confirmed) for row in cur]
     for entry in entries:
-        for language in entry.get('languages'):
-            print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'));
-            send_one_message(entry.get('email'), language[1], language[0])
-            #update timestep
-            incrementTimestep(entry.get('uuid'), language[0])
+        if entry.get('confirmed'):
+            for language in entry.get('languages'):
+                print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'));
+                send_one_message(entry.get('email'), language[1], language[0])
+                #update timestep
+                incrementTimestep(entry.get('uuid'), language[0])
     return "Mailed!"
 
 #Returns stylesheet for given pygments style
