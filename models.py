@@ -5,7 +5,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     uuid = db.Column(db.String(), primary_key=True)
-    email = db.Column(db.String())
+    email = db.Column(db.String(), unique=True)
     languages = db.Column(JSON)
 
     def __init__(self, uuid, email, languages):
