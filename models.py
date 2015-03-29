@@ -7,7 +7,7 @@ class User(db.Model):
     uuid = db.Column(db.String(), primary_key=True)
     email = db.Column(db.String(), unique=True, nullable=False)
     languages = db.Column(JSON)
-    confirmed = db.Column(db.Boolean(), nullable=False, default=False)
+    verified = db.Column(db.Boolean(), nullable=False, default=False)
 
     def __init__(self, uuid, email, languages, confirmed=False):
         self.uuid =uuid

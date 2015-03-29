@@ -79,7 +79,7 @@ def get_email():
     if languages == None:
         #New User
         insertLanguagesByEmail(email, [[language, 0]])
-        sendConfirmation(email)
+        sendVerification(email)
     else:
         #Old User
         #Test that language is not already in any of the entires
@@ -91,15 +91,15 @@ def get_email():
 
     return render_template('index.html', error=error)
 
-@app.route('/confirm/<uuid>')
-def confirm(uuid):
+@app.route('/verify/<uuid>')
+def verify(uuid):
     error = None
 
-    print("confirm user with uuid", uuid)
+    print("verify user with uuid", uuid)
 
-    confirmByUUID(uuid)
+    verifyByUUID(uuid)
 
-    flash("Your email has been confirmed")
+    flash("Your email has been verified")
     return redirect(url_for('hello'))
 
 
@@ -130,10 +130,10 @@ if DEBUG:
         entries = [dict(email=row.email, languages=json.loads(row.languages)) for row in cur]
         return render_template('db.html', entries=entries)
 
-#confirm by UUID
-def confirmByUUID(uuid):
+#verify by UUID
+def verifyByUUID(uuid):
     entry = User.query.filter_by(uuid=uuid).first()
-    entry.confirmed = True
+    entry.verified = True
     db.session.commit()
 
 #retrieve languages by email
@@ -188,8 +188,8 @@ def incrementTimestep(uuid, language):
             languages[i][1] += 1;
     updateLanguagesByUUID(uuid, languages)
 
-#send confirmation email
-def sendConfirmation(email):
+#send verification email
+def sendVerification(email):
     with app.test_request_context():
         uuid = UUIDByEmail(email)
         html = '''
@@ -198,13 +198,13 @@ def sendConfirmation(email):
         </head>
         <body>
         <div>
-        Thank you for signing up for subcode! Before you can start receiving code, you need to confirm your email.
+        Thank you for signing up for subcode! Before you can start receiving code, you need to verify your email.
         </div>
-        <a href=%(confirmURL)s><div class="link">Confirm Email</div></a>
+        <a href=%(verifyURL)s><div class="link">Verify Email</div></a>
         </body>
-        ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'confirmURL': BASE_URL + url_for('confirm', uuid=uuid)}
-        response = sendEmail("Subcode <smulumudi@gmail.com>", email, "Subcode Email Confirmation", html)
-        print("sent confirmation email to", email, "with response", response)
+        ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'verifyURL': BASE_URL + url_for('verify', uuid=uuid)}
+        response = sendEmail("Subcode <smulumudi@gmail.com>", email, "Subcode Email Verification", html)
+        print("sent verification email to", email, "with response", response)
 
 #send mail
 def engine():
@@ -213,9 +213,9 @@ def engine():
 
 def sendCode(db):
     cur = User.query.all()
-    entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages), confirmed=row.confirmed) for row in cur]
+    entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages), verified=row.verified) for row in cur]
     for entry in entries:
-        if entry.get('confirmed'):
+        if entry.get('verified'):
             for language in entry.get('languages'):
                 print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'));
                 send_one_message(entry.get('email'), language[1], language[0])
