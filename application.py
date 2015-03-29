@@ -129,12 +129,6 @@ if DEBUG:
         entries = [dict(email=row.email, languages=json.loads(row.languages)) for row in cur]
         return render_template('db.html', entries=entries)
 
-
-#send mail
-def engine():
-    print("Sending mail at", datetime.now())
-    print(send_mail(db))
-
 #confirm by UUID
 def confirmByUUID(uuid):
     entry = User.query.filter_by(uuid=uuid).first()
@@ -193,8 +187,12 @@ def incrementTimestep(uuid, language):
             languages[i][1] += 1;
     updateLanguagesByUUID(uuid, languages)
 
+#send mail
+def engine():
+    print("Sending mail at", datetime.now())
+    print(sendCode(db))
 
-def send_mail(db):
+def sendCode(db):
     cur = User.query.all()
     entries = [dict(uuid=row.uuid, email=row.email, languages=json.loads(row.languages), confirmed=row.confirmed) for row in cur]
     for entry in entries:
@@ -232,31 +230,39 @@ def send_one_message(receiver, day, language):
         with app.test_request_context():
             formattedCode = highlight(code, get_lexer_for_filename('.'+getFileFromLanguage(language)), HtmlFormatter(linenos=False))
             print(formattedCode)
-            response = requests.post(
-                MAILGUN_BASE_URL+"/messages",
-                auth=("api", MAILGUN_API_KEY),
-                data={"from": "Subcode <smulumudi@gmail.com>",
-                      "to": receiver,
-                      "subject": "New " + language + " code from Subcode",
-                      "html": '''
-                      <head>
-                        %(styleSheet)s
-                      </head>
-                      <body>
-                      We have some new %(language)s code for you:
 
-                      <div class=\"container hll\">
-                      %(formattedCode)s
-                      </div>
-                      <div class="buttons">
-                      <a href=%(unsubscribeURL)s><div class="unsubscribe">Unsubscribe from %(language)s</div></a>
-                      </div>
-                      </body>
-                      ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
-                      })
+
+            html = '''
+            <head>
+              %(styleSheet)s
+            </head>
+            <body>
+            We have some new %(language)s code for you:
+
+            <div class=\"container hll\">
+            %(formattedCode)s
+            </div>
+            <div class="buttons">
+            <a href=%(unsubscribeURL)s><div class="unsubscribe">Unsubscribe from %(language)s</div></a>
+            </div>
+            </body>
+            ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
+
+            response = sendEmail("Subcode <smulumudi@gmail.com>", receiver, "New " + language + " code from Subcode", html)
             print('mailed things with response', response)
     else :
         print("No code! Uh-oh!")
+
+def sendEmail(sender, receiver, subject, html):
+    response = requests.post(
+        MAILGUN_BASE_URL+"/messages",
+        auth=("api", MAILGUN_API_KEY),
+        data={"from": sender,
+              "to": receiver,
+              "subject": subject,
+              "html": html})
+    return response
+
 
 def getFileFromLanguage(language):
     langs = {
