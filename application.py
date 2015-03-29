@@ -79,6 +79,7 @@ def get_email():
     if languages == None:
         #New User
         insertLanguagesByEmail(email, [[language, 0]])
+        sendConfirmation(email)
     else:
         #Old User
         #Test that language is not already in any of the entires
@@ -186,6 +187,17 @@ def incrementTimestep(uuid, language):
         if languages[i][0] == language:
             languages[i][1] += 1;
     updateLanguagesByUUID(uuid, languages)
+
+#send confirmation email
+def sendConfirmation(email):
+    with app.test_request_context():
+        uuid = UUIDByEmail(email)
+        html = '''
+        Thank you for signing up for subcode! Before you can start receiving code, you need to confirm your email.
+        <a href=%(confirmURL)s><div class="confirm">Confirm Email</div></a>
+        ''' % {'confirmURL': BASE_URL + url_for('confirm', uuid=uuid)}
+        response = sendEmail("Subcode <smulumudi@gmail.com>", email, "Subcode Email Confirmation", html)
+        print("sent confirmation email with response", response)
 
 #send mail
 def engine():
