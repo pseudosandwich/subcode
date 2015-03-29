@@ -193,11 +193,18 @@ def sendConfirmation(email):
     with app.test_request_context():
         uuid = UUIDByEmail(email)
         html = '''
+        <head>
+        %(styleSheet)s
+        </head>
+        <body>
+        <div>
         Thank you for signing up for subcode! Before you can start receiving code, you need to confirm your email.
-        <a href=%(confirmURL)s><div class="confirm">Confirm Email</div></a>
-        ''' % {'confirmURL': BASE_URL + url_for('confirm', uuid=uuid)}
+        </div>
+        <a href=%(confirmURL)s><div class="link">Confirm Email</div></a>
+        </body>
+        ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'confirmURL': BASE_URL + url_for('confirm', uuid=uuid)}
         response = sendEmail("Subcode <smulumudi@gmail.com>", email, "Subcode Email Confirmation", html)
-        print("sent confirmation email with response", response)
+        print("sent confirmation email to", email, "with response", response)
 
 #send mail
 def engine():
@@ -224,7 +231,7 @@ def styleSheet(style):
           color: black;
           text-decoration: none;
         }
-        div.unsubscribe
+        div.link
         {
           display: inline-block;
           background:transparent;
@@ -255,7 +262,7 @@ def send_one_message(receiver, day, language):
             %(formattedCode)s
             </div>
             <div class="buttons">
-            <a href=%(unsubscribeURL)s><div class="unsubscribe">Unsubscribe from %(language)s</div></a>
+            <a href=%(unsubscribeURL)s><div class="link">Unsubscribe from %(language)s</div></a>
             </div>
             </body>
             ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
