@@ -42,6 +42,9 @@ $(function() {
     $('#lang').removeClass('active');
   });
 
+  $(document).ready(function() {
+    $('#email').focus();
+  });
 });
 
 $('form').submit(function(e) {
