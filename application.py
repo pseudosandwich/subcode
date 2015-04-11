@@ -198,7 +198,7 @@ def sendVerification(email):
         </head>
         <body>
         <div>
-        Thank you for signing up for subcode! Before you can start receiving code, you need to verify your email.
+        Thanks for signing up for Subcode! Before you can start receiving code, we need to verify your email.
         </div>
         <a href=%(verifyURL)s><div class="link">Verify Email</div></a>
         </body>
