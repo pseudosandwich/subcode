@@ -20,6 +20,7 @@ from pygments.lexers import guess_lexer
 from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
 import uuid
+import premailer
 
 #Environment variables:
 try:
@@ -237,7 +238,6 @@ def styleSheet(style):
           background:transparent;
           border:1px solid #ddd;
           border-radius:4px;
-          margin:0 auto;
           margin:0.5rem;
           padding:0.5rem;
         }''' \
@@ -266,6 +266,8 @@ def send_one_message(receiver, day, language):
             </div>
             </body>
             ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
+
+            html = premailer.transform(html);
 
             response = sendEmail("Subcode <smulumudi@gmail.com>", receiver, "New " + language + " code from Subcode", html)
             print('mailed things with response', response)
