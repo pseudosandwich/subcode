@@ -117,7 +117,7 @@ def unsubscribe(uuid, language):
             del languages[i]
             break
 
-    updateLanguagesByUUID(uuid, languages);
+    updateLanguagesByUUID(uuid, languages)
 
     flash("You have been unsubscribed from " + str(language))
     return redirect(url_for('hello'))
@@ -186,7 +186,7 @@ def incrementTimestep(uuid, language):
     languages = languagesByUUID(uuid)
     for i in range(len(languages)):
         if languages[i][0] == language:
-            languages[i][1] += 1;
+            languages[i][1] += 1
     updateLanguagesByUUID(uuid, languages)
 
 #send verification email
@@ -218,7 +218,7 @@ def sendCode(db):
     for entry in entries:
         if entry.get('verified'):
             for language in entry.get('languages'):
-                print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'));
+                print("Email:", entry.get('email'), "timestep", language[1], "Languages", language[0], "uuid", entry.get('uuid'))
                 send_one_message(entry.get('email'), language[1], language[0])
                 #update timestep
                 incrementTimestep(entry.get('uuid'), language[0])
@@ -267,7 +267,7 @@ def send_one_message(receiver, day, language):
             </body>
             ''' % {'styleSheet': styleSheet(PYGMENTS_STYLE), 'language': language, 'formattedCode': formattedCode, 'email': receiver, 'unsubscribeURL': BASE_URL + url_for('unsubscribe', uuid=UUIDByEmail(receiver), language=language)}
 
-            html = premailer.transform(html);
+            html = premailer.transform(html)
 
             response = sendEmail("Subcode <smulumudi@gmail.com>", receiver, "New " + language + " code from Subcode", html)
             print('mailed things with response', response)
@@ -312,8 +312,8 @@ def getFileFromLanguage(language):
         'Swift': 'swift',
         'Shell': 'sh',
         'SQL': 'sql'
-    };
-    return langs[language];
+    }
+    return langs[language]
 
 def makeGithubRequest(url, escape):
 
@@ -394,7 +394,7 @@ if __name__ == "__main__":
 
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
-    #send_one_message('jacksondecampos@gmail.com', 10, 'Swift');
+    #send_one_message('jackson@jacksondc.com', 10, 'Swift')
     app.run(debug=DEBUG, use_reloader=False)
 
     try:
